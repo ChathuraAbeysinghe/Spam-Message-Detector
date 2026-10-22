@@ -253,7 +253,23 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 - **Open in Browser**: [http://localhost:8000](http://localhost:8000)
 - **Interactive Swagger API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-#### REST API Example:
+#### REST API Endpoints:
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/predict` | Classify single SMS & save to SQLite database |
+| `POST` | `/api/batch-predict` | Bulk classify JSON message array |
+| `POST` | `/api/batch-upload` | Upload `.csv` or `.txt` file for batch classification |
+| `GET` | `/api/history` | Paginated classification history with search and filters |
+| `GET` | `/api/history/stats` | Real-time aggregate counts and percentages from SQLite |
+| `DELETE` | `/api/history/{id}` | Delete a single history record |
+| `DELETE` | `/api/history` | Clear all records from history |
+| `POST` | `/api/history/{id}/feedback` | Submit user feedback (`correct` or `misclassified`) |
+| `GET` | `/api/history/export` | Download history as a CSV file |
+| `GET` | `/metrics` | Retrieve model performance metrics artifact |
+| `GET` | `/health` | System health check (model + DB status) |
+
+#### Example Prediction Request:
 ```bash
 curl -X POST "http://localhost:8000/predict" \
      -H "Content-Type: application/json" \

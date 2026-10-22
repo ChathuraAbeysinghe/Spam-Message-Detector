@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import streamlit as st
+from src import database
 from src.predictor import InvalidMessageError, ModelNotLoadedError, SpamPredictor
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -156,6 +157,10 @@ def main():
                 try:
                     predictor = load_predictor()
                     result = predictor.predict(message_input)
+                    try:
+                        database.save_prediction(result)
+                    except Exception:
+                        pass
 
                     st.markdown("---")
                     if result["is_spam"]:
@@ -167,6 +172,15 @@ def main():
                     spam_prob = result["spam_probability"]
                     st.write(f"**Model-Estimated Spam Probability:** {spam_prob * 100:.1f}%")
                     st.progress(spam_prob)
+
+                    # Analysis Details Breakdown
+                    details = result.get("analysis_details", {})
+                    st.markdown("#### 🔍 Heuristic Analysis Details")
+                    d1, d2 = st.columns(2)
+                    d1.markdown(f"**Keywords:** {details.get('suspicious_keywords', 'None')}")
+                    d1.markdown(f"**Links:** {details.get('links_detected', 'None')}")
+                    d2.markdown(f"**Sender Tone:** {details.get('sender_analysis', 'Normal')}")
+                    d2.markdown(f"**Pattern:** {details.get('message_pattern', 'Standard SMS')}")
 
                     st.info(f"**Explanation:** {result['explanation']}")
                     st.caption(f"ℹ️ {result['disclaimer']}")
