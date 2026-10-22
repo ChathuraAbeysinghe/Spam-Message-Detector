@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpamDetector — AI SMS Message Classifier</title>
+  <meta name="description" content="AI-Powered SMS Spam Detector with real-time machine learning classification, SQLite history, batch file processing, and deep heuristic analysis.">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body data-theme="light">
+
+  <!-- Mobile Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <div class="dashboard-wrapper">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <div class="brand-badge">
+            <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">Spam<span class="brand-highlight">Detector</span></div>
+            <div class="brand-caption">Keep your inbox safe</div>
+          </div>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav" aria-label="Main Navigation">
+          <button type="button" class="nav-item active" data-view="home" id="navHome">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>Home</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="analyze" id="navAnalyze">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Batch & Deep Scan</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="history" id="navHistory">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>History</span>
+            <span class="nav-badge" id="navHistoryCount">0</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="about" id="navAbout">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>Model & About</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Bottom AI Badge -->
+      <div class="sidebar-footer">
+        <div class="ai-shield-card">
+          <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <div class="ai-shield-title">AI-Powered</div>
+            <div class="ai-shield-sub">Naive Bayes • TF-IDF</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content">
+      
+      <!-- Top Bar: Mobile Hamburger + Status Dot + Theme Toggle + User Pill -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div class="system-status-indicator">
+            <span class="status-pulse-dot" id="systemStatusDot"></span>
+            <span class="status-text" id="systemStatusText">Model Active</span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Light/Dark Mode Switcher -->
+          <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle light and dark mode">
+            <svg class="theme-sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </button>
+
+          <!-- User Pill with Dropdown Menu -->
+          <div class="user-pill-container" id="userPillContainer">
+            <button type="button" class="user-pill" id="userPillBtn" aria-expanded="false" aria-haspopup="true">
+              <div class="user-avatar">S</div>
+              <span class="user-name">Student</span>
+              <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+              <div class="dropdown-header">
+                <strong>University IT Project</strong>
+                <span class="dropdown-sub">Spam Detector v1.2.0</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a href="/docs" target="_blank" class="dropdown-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>Interactive Swagger API ↗</span>
+              </a>
+              <button type="button" class="dropdown-item" onclick="switchView('history');">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>View Full History</span>
+              </button>
+              <button type="button" class="dropdown-item" onclick="exportHistoryCsv();">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export SQLite to CSV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ========================================================
+           VIEW 1: MAIN DETECTOR (HOME)
+           ======================================================== -->
+      <section class="view-container active-view" id="viewHome">
+        
+        <!-- Hero Header -->
+        <div class="hero-header">
+          <div class="hero-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="hero-title">Spam <span class="purple-text">Message Detector</span></h1>
+            <p class="hero-description">
+              Classify SMS text messages in real-time with machine learning.
+              Trained on real SMS datasets with TF-IDF vectorization and Multinomial Naive Bayes.
+            </p>
+          </div>
+        </div>
+
+        <!-- Quick Test Sample Chips -->
+        <div class="samples-section">
+          <span class="samples-title">Quick Test Samples:</span>
+          <div class="samples-chips" id="samplesChips">
+            <button type="button" class="sample-chip" data-sample="urgent_prize">
+              <span class="chip-badge spam-badge">Spam</span>
+              🎁 £1,000 Gift Card
+            </button>
+            <button type="button" class="sample-chip" data-sample="bank_alert">
+              <span class="chip-badge spam-badge">Spam</span>
+              🚨 Urgent Bank Alert
+            </button>
+            <button type="button" class="sample-chip" data-sample="legit_chat">
+              <span class="chip-badge ham-badge">Ham</span>
+              💬 Meeting at Library
+            </button>
+            <button type="button" class="sample-chip" data-sample="otp_code">
+              <span class="chip-badge ham-badge">Ham</span>
+              🔐 Bank 2FA Code
+            </button>
+            <button type="button" class="sample-chip" data-sample="delivery">
+              <span class="chip-badge ham-badge">Ham</span>
+              📦 Order Shipped
+            </button>
+          </div>
+        </div>
+
+        <!-- Two-Column Responsive Grid -->
+        <div class="content-grid">
+          
+          <!-- LEFT COLUMN: INPUT CARD & RESULT CARD -->
+          <div class="grid-left">
+            
+            <!-- Card 1: Enter Message -->
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Enter Message</span>
+                <span class="char-counter" id="charCounter">0/5000 chars • 0 words</span>
+              </div>
+
+              <form id="detectorForm" onsubmit="event.preventDefault(); handlePredict();">
+                <div class="textarea-container">
+                  <textarea 
+                    id="messageInput"
+                    class="message-textarea"
+                    placeholder="Type or paste an SMS message to classify (e.g. 'Congratulations! You won a $1,000 gift card. Call now to claim!')..."
+                    maxlength="5000"
+                    rows="4"
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- Alert Error Message -->
+                <div id="errorBanner" class="error-banner" role="alert"></div>
+
+                <!-- Action Button Row -->
+                <div class="button-row">
+                  <button type="button" class="btn btn-outline" id="clearBtn" onclick="handleClear();">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    <span>Clear</span>
+                  </button>
+
+                  <button type="submit" class="btn btn-primary" id="predictBtn">
+                    <svg class="btn-icon" id="predictIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span id="predictText">Check for Spam</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Card 2: Result Section -->
+            <div class="dash-card result-panel" id="resultPanel" style="display: none;">
+              <div class="card-head">
+                <span class="card-head-title">Classification Result</span>
+                <span class="result-timestamp" id="resultTimestamp">Just now</span>
+              </div>
+
+              <!-- Main Result Alert Banner -->
+              <div class="result-banner not-spam" id="resultBanner">
+                <div class="result-banner-left">
+                  <div class="result-icon-circle" id="resultIconCircle">
+                    <svg class="result-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="result-heading" id="resultHeading">This message is <span class="res-highlight">NOT spam</span></div>
+                    <div class="result-subtext" id="resultSubtext">The content appears to be a legitimate message.</div>
+                  </div>
+                </div>
+                <div class="confidence-pill" id="confidencePill">Confidence: 92%</div>
+              </div>
+
+              <!-- Probability Bar -->
+              <div class="prob-bar-container">
+                <div class="prob-bar-header">
+                  <span>Model-Estimated Spam Probability</span>
+                  <strong id="probBarText">0.0%</strong>
+                </div>
+                <div class="prob-bar-track">
+                  <div class="prob-bar-fill" id="probBarFill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Analysis Details List -->
+              <div class="analysis-section">
+                <h3 class="analysis-title">Detailed Analysis Breakdown</h3>
+                
+                <div class="analysis-list">
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap pin-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="10" r="3"/>
+                          <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/>
+                        </svg>
+                      </div>
+                      <span>Suspicious Keywords</span>
+                    </div>
+                    <div class="analysis-val" id="valKeywords">None found</div>
+                  </div>
+
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap link-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                      </div>
+                      <span>Links Detected</span>
+                    </div>
+                    <div class="analysis-val" id="valLinks">None found</div>
+                  </div>
+
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap user-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                          <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                      </div>
+                      <span>Sender Tone</span>
+                    </div>
+                    <div class="analysis-val" id="valSender">Looks legitimate</div>
+                  </div>
+
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap doc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                          <line x1="16" y1="13" x2="8" y2="13"/>
+                          <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                      </div>
+                      <span>Message Pattern</span>
+                    </div>
+                    <div class="analysis-val" id="valPattern">Normal conversation pattern</div>
+                  </div>
+                </div>
+
+                <!-- User Feedback Buttons -->
+                <div class="feedback-container">
+                  <span class="feedback-prompt">Was this classification accurate?</span>
+                  <div class="feedback-actions">
+                    <button type="button" class="btn-feedback" id="btnFeedbackCorrect" title="Mark as correct">
+                      👍 Correct
+                    </button>
+                    <button type="button" class="btn-feedback" id="btnFeedbackWrong" title="Report misclassification">
+                      👎 Misclassified
+                    </button>
+                  </div>
+                </div>
+
+                <div class="disclaimer-note" id="disclaimerNote">
+                  Notice: Model predictions are statistical estimates based on historical SMS data and are not an absolute guarantee of safety.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: REAL QUICK STATS & RECENT MESSAGES -->
+          <div class="grid-right">
+            
+            <!-- Card 3: Quick Stats (Donut Chart - Real Live Data) -->
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Real-Time Statistics</span>
+                <span class="stats-badge" id="statsSourceBadge">Live SQLite Data</span>
+              </div>
+
+              <div class="stats-card-body">
+                <!-- SVG Donut Meter -->
+                <div class="donut-chart-box">
+                  <svg class="donut-svg" viewBox="0 0 100 100">
+                    <circle class="donut-bg-ring" cx="50" cy="50" r="38" />
+                    <circle class="donut-spam-ring" cx="50" cy="50" r="38" />
+                    <circle class="donut-ham-ring" cx="50" cy="50" r="38" />
+                  </svg>
+                  <div class="donut-center-label">
+                    <div class="donut-center-pct" id="centerStatPct">0%</div>
+                    <div class="donut-center-text" id="centerStatLabel">Clean</div>
+                  </div>
+                </div>
+
+                <!-- Stats Legend & Breakdown -->
+                <div class="stats-legend">
+                  <div class="legend-row">
+                    <div class="legend-label">
+                      <span class="legend-dot dot-green"></span>
+                      <span>Not Spam (Ham)</span>
+                    </div>
+                    <strong class="legend-val" id="statHamPct">0%</strong>
+                  </div>
+
+                  <div class="legend-row">
+                    <div class="legend-label">
+                      <span class="legend-dot dot-red"></span>
+                      <span>Spam Detected</span>
+                    </div>
+                    <strong class="legend-val" id="statSpamPct">0%</strong>
+                  </div>
+
+                  <div class="legend-row total-row">
+                    <div class="legend-label">
+                      <span>Total Checked</span>
+                    </div>
+                    <strong class="legend-val" id="statTotalChecked">0</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Recent Messages (Live from DB) -->
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Recent Scans</span>
+                <button type="button" class="btn-link" onclick="switchView('history');">View All →</button>
+              </div>
+
+              <div class="recent-list" id="recentList">
+                <!-- Dynamically populated or empty state -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ========================================================
+           VIEW 2: BATCH & DEEP SCAN (ANALYZE)
+           ======================================================== -->
+      <section class="view-container" id="viewAnalyze" style="display: none;">
+        <div class="hero-header">
+          <div class="hero-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="hero-title">Batch & <span class="purple-text">Deep Message Scanner</span></h1>
+            <p class="hero-description">Upload a CSV or TXT file of messages to classify hundreds of SMS records in bulk, or run deep heuristic scans.</p>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="card-head">
+            <span class="card-head-title">Upload File for Bulk Classification</span>
+            <span class="card-hint">Supports .csv or .txt (up to 500 messages)</span>
+          </div>
+
+          <div class="upload-dropzone" id="uploadDropzone">
+            <input type="file" id="batchFileInput" accept=".csv,.txt" style="display: none;">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="upload-title">Drag & drop your file here, or <button type="button" class="btn-link-inline" id="browseFileBtn">browse computer</button></div>
+            <div class="upload-subtitle">CSV format: First column contains the message text • TXT format: One message per line</div>
+          </div>
+
+          <!-- File upload progress bar -->
+          <div class="batch-progress-container" id="batchProgress" style="display: none;">
+            <div class="batch-progress-text" id="batchProgressText">Processing messages through ML pipeline...</div>
+            <div class="prob-bar-track">
+              <div class="prob-bar-fill progress-animated" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Batch Results Summary -->
+          <div class="batch-results-panel" id="batchResultsPanel" style="display: none;">
+            <div class="batch-summary-cards">
+              <div class="metric-pill">
+                <div class="metric-num" id="batchTotalNum">0</div>
+                <div class="metric-title">Messages Scanned</div>
+              </div>
+              <div class="metric-pill">
+                <div class="metric-num spam-color" id="batchSpamNum">0</div>
+                <div class="metric-title">Spam Flagged</div>
+              </div>
+              <div class="metric-pill">
+                <div class="metric-num ham-color" id="batchHamNum">0</div>
+                <div class="metric-title">Clean Messages</div>
+              </div>
+              <div class="metric-pill">
+                <div class="metric-num" id="batchSpamPct">0%</div>
+                <div class="metric-title">Spam Ratio</div>
+              </div>
+            </div>
+
+            <!-- Table of batch results -->
+            <div class="table-responsive" style="margin-top: 1.5rem;">
+              <table class="data-table" id="batchTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Prediction</th>
+                    <th>Confidence</th>
+                    <th>Message</th>
+                    <th>Suspicious Keywords</th>
+                  </tr>
+                </thead>
+                <tbody id="batchTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           VIEW 3: HISTORY MANAGEMENT DASHBOARD
+           ======================================================== -->
+      <section class="view-container" id="viewHistory" style="display: none;">
+        <div class="hero-header">
+          <div class="hero-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="hero-title">Classification <span class="purple-text">History</span></h1>
+            <p class="hero-description">All inspected messages stored in persistent SQLite database. Search, filter, inspect, and export records.</p>
+          </div>
+        </div>
+
+        <!-- History Summary Metrics -->
+        <div class="history-metrics-row">
+          <div class="history-stat-box">
+            <div class="hstat-num" id="histTotalChecked">0</div>
+            <div class="hstat-lbl">Total Stored Records</div>
+          </div>
+          <div class="history-stat-box">
+            <div class="hstat-num spam-color" id="histTotalSpam">0</div>
+            <div class="hstat-lbl">Spam Detections</div>
+          </div>
+          <div class="history-stat-box">
+            <div class="hstat-num ham-color" id="histTotalHam">0</div>
+            <div class="hstat-lbl">Clean Messages</div>
+          </div>
+          <div class="history-stat-box">
+            <div class="hstat-num" id="histSpamRatio">0.0%</div>
+            <div class="hstat-lbl">Spam Incident Rate</div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <!-- History Toolbar -->
+          <div class="history-toolbar">
+            <div class="history-search-box">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input 
+                type="text" 
+                id="historySearchInput" 
+                class="history-search-input" 
+                placeholder="Search messages by keyword..." 
+                aria-label="Search classification history"
+              >
+            </div>
+
+            <div class="history-filters">
+              <!-- Filter Type Pills -->
+              <div class="filter-pill-group">
+                <button type="button" class="filter-btn active" data-filter="all">All</button>
+                <button type="button" class="filter-btn" data-filter="spam">Spam Only</button>
+                <button type="button" class="filter-btn" data-filter="ham">Clean Only</button>
+              </div>
+
+              <!-- Sort Dropdown -->
+              <select id="historySortSelect" class="sort-select" aria-label="Sort Order">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest_confidence">Highest Confidence</option>
+                <option value="lowest_confidence">Lowest Confidence</option>
+              </select>
+
+              <!-- Actions -->
+              <div class="history-btn-actions">
+                <button type="button" class="btn btn-secondary" onclick="exportHistoryCsv();" title="Download SQLite database as CSV">
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span>Export CSV</span>
+                </button>
+
+                <button type="button" class="btn btn-danger-outline" onclick="openClearModal();" title="Wipe all history from SQLite">
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  <span>Clear History</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Table Container -->
+          <div class="table-responsive">
+            <table class="data-table" id="historyTable">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th style="width: 120px;">Label</th>
+                  <th style="width: 100px;">Confidence</th>
+                  <th>Message Snippet</th>
+                  <th style="width: 160px;">Keywords</th>
+                  <th style="width: 150px;">Timestamp</th>
+                  <th style="width: 130px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <!-- Dynamically rendered rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State (Shown when 0 records match) -->
+          <div class="empty-state" id="historyEmptyState" style="display: none;">
+            <div class="empty-state-icon">📭</div>
+            <h3 class="empty-state-title" id="emptyStateTitle">No records found</h3>
+            <p class="empty-state-text" id="emptyStateText">No messages have been classified yet. Test a sample message on the Home tab to start building your history!</p>
+            <button type="button" class="btn btn-primary" onclick="switchView('home');" style="margin-top: 1rem;">Go to Classifier</button>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="pagination-bar" id="historyPagination">
+            <div class="pagination-info" id="paginationInfo">Showing 0 of 0 records</div>
+            <div class="pagination-controls">
+              <button type="button" class="btn btn-outline btn-sm" id="btnPrevPage" disabled onclick="handlePrevPage();">← Previous</button>
+              <span class="pagination-page-label" id="pageNumberLabel">Page 1</span>
+              <button type="button" class="btn btn-outline btn-sm" id="btnNextPage" disabled onclick="handleNextPage();">Next →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           VIEW 4: ABOUT & MODEL SPECS
+           ======================================================== -->
+      <section class="view-container" id="viewAbout" style="display: none;">
+        <div class="hero-header">
+          <div class="hero-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="hero-title">Model Specifications & <span class="purple-text">Evaluation</span></h1>
+            <p class="hero-description">Detailed Scikit-Learn training metrics, confusion matrix, and pipeline architecture.</p>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="grid-left">
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Performance Metrics (Test Split)</span>
+              </div>
+              <div class="metrics-summary-grid">
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutAccuracy">98.45%</div>
+                  <div class="metric-title">Test Accuracy</div>
+                </div>
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutPrecision">98.28%</div>
+                  <div class="metric-title">Spam Precision</div>
+                </div>
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutRecall">89.06%</div>
+                  <div class="metric-title">Spam Recall</div>
+                </div>
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutF1">93.44%</div>
+                  <div class="metric-title">F1-Score</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-dark);">Test Confusion Matrix</h4>
+                <div class="cm-display-grid">
+                  <div class="cm-box cm-tn">
+                    <div class="cm-num" id="aboutTN">902</div>
+                    <div class="cm-desc">True Negatives (Ham ✓)</div>
+                  </div>
+                  <div class="cm-box cm-fp">
+                    <div class="cm-num" id="aboutFP">2</div>
+                    <div class="cm-desc">False Positives (Ham ❌ Spam)</div>
+                  </div>
+                  <div class="cm-box cm-fn">
+                    <div class="cm-num" id="aboutFN">14</div>
+                    <div class="cm-desc">False Negatives (Spam ❌ Ham)</div>
+                  </div>
+                  <div class="cm-box cm-tp">
+                    <div class="cm-num" id="aboutTP">114</div>
+                    <div class="cm-desc">True Positives (Spam ✓)</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="context-explanation-card">
+                <h4>🎯 Why We Prioritize High Precision (98.28%)</h4>
+                <p>
+                  In SMS communications, a <strong>False Positive</strong> (classifying an important banking or family SMS as spam) is far more disruptive to users than a False Negative (a spam ad slipping in).
+                  Our Multinomial Naive Bayes pipeline with Laplace smoothing (α=0.1) achieves exceptional precision to ensure legitimate messages are never wrongfully blocked.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-right">
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Architecture Details</span>
+              </div>
+              <ul class="specs-list">
+                <li><span>Classifier:</span> <strong>Multinomial Naive Bayes (α=0.1)</strong></li>
+                <li><span>Feature Extraction:</span> <strong>TF-IDF (1-2 N-Grams, 5,000 max features)</strong></li>
+                <li><span>Dataset:</span> <strong>UCI SMS Spam Collection (5,158 clean rows)</strong></li>
+                <li><span>Train / Test Split:</span> <strong>80% Train / 20% Stratified Test</strong></li>
+                <li><span>Database Storage:</span> <strong>SQLite 3 with indexed timestamps</strong></li>
+                <li><span>Backend API:</span> <strong>FastAPI 0.100+ (Asynchronous Python)</strong></li>
+                <li><span>API Documentation:</span> <a href="/docs" target="_blank" style="color: var(--primary-purple); font-weight: 600;">Swagger OpenAPI ↗</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="dash-footer">
+        AI Spam Message Detector • University IT Undergraduate Project • Built with Python & Scikit-learn
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- CONFIRMATION MODAL: CLEAR HISTORY -->
+  <div class="modal-backdrop" id="clearHistoryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h3 class="modal-title" id="modalTitle">Clear All History?</h3>
+      <p class="modal-message">
+        Are you sure you want to delete all saved records from the database? This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeClearModal();">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="confirmClearHistory();">Yes, Delete All</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
