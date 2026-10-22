@@ -62,6 +62,7 @@ class PredictionResponse(BaseModel):
     explanation: str
     character_count: int
     word_count: int
+    analysis_details: dict[str, str] = Field(default_factory=dict)
     disclaimer: str
 
 

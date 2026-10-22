@@ -3,205 +3,443 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Spam Message Detector — SMS Classifier</title>
-  <meta name="description" content="A machine learning web application using Scikit-Learn TF-IDF and Multinomial Naive Bayes to classify SMS messages as Spam or Ham.">
+  <title>SpamDetector — Keep your inbox safe</title>
+  <meta name="description" content="AI Spam Message Detector with interactive machine learning inference and real-time heuristics.">
   <link rel="stylesheet" href="/static/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-theme="light">
 
-  <!-- Top Navigation Header -->
-  <header>
-    <div class="container header-content">
-      <div class="brand">
-        <div class="brand-icon" aria-hidden="true">🛡️</div>
-        <div>
-          <div class="brand-title">AI Spam Guard</div>
-          <div class="brand-subtitle">NLP SMS Classifier</div>
+  <div class="dashboard-wrapper">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <div class="brand-badge">
+            <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">Spam<span class="brand-highlight">Detector</span></div>
+            <div class="brand-caption">Keep your inbox safe</div>
+          </div>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav">
+          <button type="button" class="nav-item active" data-view="home" id="navHome">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>Home</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="analyze" id="navAnalyze">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Analyze Message</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="history" id="navHistory">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>History</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="about" id="navAbout">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>About</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Bottom AI Badge -->
+      <div class="sidebar-footer">
+        <div class="ai-shield-card">
+          <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <div class="ai-shield-title">AI-Powered</div>
+            <div class="ai-shield-sub">Detect spam. Stay secure.</div>
+          </div>
         </div>
       </div>
-      <div class="header-badge" id="systemStatus">
-        <span class="pulse-dot"></span>
-        <span id="statusText">Model Ready</span>
-      </div>
-    </div>
-  </header>
+    </aside>
 
-  <main class="container">
-    <!-- Hero / Headline -->
-    <section class="hero">
-      <h1>AI SMS Spam Message Detector</h1>
-      <p>Analyze incoming text messages in real-time using a trained Machine Learning pipeline (TF-IDF + Multinomial Naive Bayes).</p>
-    </section>
-
-    <!-- Main Content Grid -->
-    <div class="app-grid">
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content">
       
-      <!-- Left Column: Input Form & Result -->
-      <section class="card" aria-labelledby="detectorHeading">
-        <h2 id="detectorHeading" class="card-title">
-          <span>✉️</span> Message Classifier
-        </h2>
+      <!-- Top Bar: Mobile Hamburger + Theme Toggle + User Pill -->
+      <header class="topbar">
+        <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
 
-        <!-- Sample messages chips -->
-        <div class="sample-section">
-          <span class="sample-label">Quick Test Samples (Tap to test):</span>
-          <div class="sample-chips">
-            <button type="button" class="chip chip-spam" data-msg="URGENT! You have won a £1,000 Walmart gift card! Call 09061701461 to claim your reward immediately.">
-              🚨 Prize / Scam Spam
-            </button>
-            <button type="button" class="chip chip-spam" data-msg="FreeMsg: Congrats! You are selected for a free trial. Reply YES to 80488. T&C apply.">
-              🎁 Promotion Spam
-            </button>
-            <button type="button" class="chip chip-ham" data-msg="Hey! Are you still coming to the library for study group this evening? Let me know.">
-              💬 Casual Chat (Ham)
-            </button>
-            <button type="button" class="chip chip-ham" data-msg="Your verification code is 492018. It is valid for 10 minutes. Do not share this code.">
-              🔑 OTP / Service (Ham)
-            </button>
+        <div class="topbar-actions">
+          <!-- Light/Dark Mode Switcher -->
+          <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle light and dark mode">
+            <svg class="theme-sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </button>
+
+          <!-- User Pill -->
+          <div class="user-pill">
+            <div class="user-avatar">S</div>
+            <span class="user-name">Student</span>
+            <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
           </div>
         </div>
+      </header>
 
-        <!-- Input Form -->
-        <form id="spamForm" onsubmit="event.preventDefault(); handlePredict();">
-          <div class="input-wrapper">
-            <label for="messageInput" class="sample-label">SMS Message Content:</label>
-            <textarea 
-              id="messageInput" 
-              class="message-textarea" 
-              placeholder="Paste or type an SMS message here to test (e.g., 'Congratulations! You won cash...')"
-              required
-              maxlength="5000"
-            ></textarea>
+      <!-- VIEW 1: MAIN DETECTOR (HOME / ANALYZE) -->
+      <div class="view-container active-view" id="viewHome">
+        
+        <!-- Hero Header -->
+        <section class="hero-header">
+          <div class="hero-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
           </div>
-
-          <div class="input-footer">
-            <span id="charCounter">0 / 5000 chars (0 words)</span>
-            <span id="validationMsg"></span>
+          <div>
+            <h1 class="hero-title">Spam <span class="purple-text">Message Detector</span></h1>
+            <p class="hero-description">
+              Enter a message below and let AI check if it's spam or not.<br>
+              We analyze the content, links, and patterns to keep you safe from scams.
+            </p>
           </div>
+        </section>
 
-          <!-- Error Alert Container -->
-          <div id="errorAlert" class="alert-error" role="alert"></div>
+        <!-- Two-Column Responsive Grid -->
+        <div class="content-grid">
+          
+          <!-- LEFT COLUMN: INPUT CARD & RESULT CARD -->
+          <div class="grid-left">
+            
+            <!-- Card 1: Enter Message -->
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Enter Message</span>
+                <span class="char-counter" id="charCounter">0/500</span>
+              </div>
 
-          <!-- Action Buttons -->
-          <div class="btn-group">
-            <button type="submit" id="predictBtn" class="btn btn-primary">
-              <span id="btnIcon">🔍</span>
-              <span id="btnText">Classify Message</span>
-            </button>
-            <button type="button" id="clearBtn" class="btn btn-secondary" onclick="handleClear();">
-              Clear
-            </button>
-          </div>
-        </form>
+              <form id="detectorForm" onsubmit="event.preventDefault(); handlePredict();">
+                <div class="textarea-container">
+                  <textarea 
+                    id="messageInput"
+                    class="message-textarea"
+                    placeholder="Example: Congratulations! You've won a $1000 gift card. Click here to claim now!"
+                    maxlength="5000"
+                    rows="4"
+                    required
+                  ></textarea>
+                </div>
 
-        <!-- Prediction Result Card -->
-        <article id="resultCard" class="result-card" aria-live="polite">
-          <div class="result-header">
-            <div id="resultBadge" class="result-badge">
-              <span id="badgeIcon"></span>
-              <span id="badgeLabel"></span>
+                <!-- Alert Error Message -->
+                <div id="errorBanner" class="error-banner" role="alert"></div>
+
+                <!-- Action Button Row -->
+                <div class="button-row">
+                  <button type="button" class="btn btn-outline" id="clearBtn" onclick="handleClear();">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    <span>Clear</span>
+                  </button>
+
+                  <button type="submit" class="btn btn-primary" id="predictBtn">
+                    <svg class="btn-icon" id="predictIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span id="predictText">Check for Spam</span>
+                  </button>
+                </div>
+              </form>
             </div>
-            <div id="confidenceScore" class="result-confidence"></div>
+
+            <!-- Card 2: Result Section -->
+            <div class="dash-card result-panel" id="resultPanel">
+              <div class="card-head">
+                <span class="card-head-title">Result</span>
+              </div>
+
+              <!-- Main Result Alert Banner -->
+              <div class="result-banner not-spam" id="resultBanner">
+                <div class="result-banner-left">
+                  <div class="result-icon-circle" id="resultIconCircle">
+                    <svg class="result-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="result-heading" id="resultHeading">This message is <span class="res-highlight">NOT spam</span></div>
+                    <div class="result-subtext" id="resultSubtext">The content appears to be a legitimate message.</div>
+                  </div>
+                </div>
+                <div class="confidence-pill" id="confidencePill">Confidence: 92%</div>
+              </div>
+
+              <!-- Analysis Details List -->
+              <div class="analysis-section">
+                <h3 class="analysis-title">Analysis Details</h3>
+                
+                <div class="analysis-list">
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap pin-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="10" r="3"/>
+                          <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/>
+                        </svg>
+                      </div>
+                      <span>Suspicious Keywords</span>
+                    </div>
+                    <div class="analysis-val" id="valKeywords">None found</div>
+                  </div>
+
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap link-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                      </div>
+                      <span>Links Detected</span>
+                    </div>
+                    <div class="analysis-val" id="valLinks">None found</div>
+                  </div>
+
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap user-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                          <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                      </div>
+                      <span>Sender Analysis</span>
+                    </div>
+                    <div class="analysis-val" id="valSender">Looks legitimate</div>
+                  </div>
+
+                  <div class="analysis-row">
+                    <div class="analysis-label">
+                      <div class="row-icon-wrap doc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                          <line x1="16" y1="13" x2="8" y2="13"/>
+                          <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                      </div>
+                      <span>Message Pattern</span>
+                    </div>
+                    <div class="analysis-val" id="valPattern">Normal conversation pattern</div>
+                  </div>
+                </div>
+
+                <div class="disclaimer-note" id="disclaimerNote">
+                  Notice: Model predictions are statistical estimates based on historical SMS data and are not an absolute guarantee of safety.
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <div class="meter-label">
-            <span>Estimated Spam Probability:</span>
-            <strong id="spamProbPercent">0%</strong>
-          </div>
-          <div class="progress-bar-bg" aria-hidden="true">
-            <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+          <!-- RIGHT COLUMN: QUICK STATS & RECENT MESSAGES -->
+          <div class="grid-right">
+            
+            <!-- Card 3: Quick Stats (Donut Chart) -->
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Quick Stats</span>
+              </div>
+
+              <div class="stats-card-body">
+                <!-- SVG Donut Meter -->
+                <div class="donut-chart-box">
+                  <svg class="donut-svg" viewBox="0 0 100 100">
+                    <circle class="donut-bg-ring" cx="50" cy="50" r="38" />
+                    <!-- Red segment (13% of 238.76 circumference ≈ 31) -->
+                    <circle class="donut-spam-ring" cx="50" cy="50" r="38" />
+                    <!-- Green segment (87% of 238.76 circumference ≈ 207) -->
+                    <circle class="donut-ham-ring" cx="50" cy="50" r="38" />
+                  </svg>
+                  <div class="donut-center-label">
+                    <div class="donut-center-pct" id="centerStatPct">87%</div>
+                    <div class="donut-center-text" id="centerStatLabel">Not Spam</div>
+                  </div>
+                </div>
+
+                <!-- Stats Legend & Breakdown -->
+                <div class="stats-legend">
+                  <div class="legend-row">
+                    <div class="legend-label">
+                      <span class="legend-dot dot-green"></span>
+                      <span>Not Spam</span>
+                    </div>
+                    <strong class="legend-val" id="statHamPct">87%</strong>
+                  </div>
+
+                  <div class="legend-row">
+                    <div class="legend-label">
+                      <span class="legend-dot dot-red"></span>
+                      <span>Spam</span>
+                    </div>
+                    <strong class="legend-val" id="statSpamPct">13%</strong>
+                  </div>
+
+                  <div class="legend-row total-row">
+                    <div class="legend-label">
+                      <span>Total Checked</span>
+                    </div>
+                    <strong class="legend-val" id="statTotalChecked">1,248</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Recent Messages -->
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Recent Messages</span>
+                <button type="button" class="btn-link" onclick="handleClearHistory();">Clear All</button>
+              </div>
+
+              <div class="recent-list" id="recentList">
+                <!-- Items populated dynamically via JS -->
+              </div>
+            </div>
+
           </div>
 
-          <p id="resultExplanation" class="result-explanation"></p>
-          <div class="disclaimer-box" id="resultDisclaimer"></div>
-        </article>
-      </section>
+        </div>
+      </div>
 
-      <!-- Right Column: Model Specs & Actual Performance Metrics -->
-      <aside class="card" aria-labelledby="metricsHeading">
-        <h2 id="metricsHeading" class="card-title">
-          <span>📊</span> Model & Benchmark Metrics
-        </h2>
+      <!-- VIEW 2: ABOUT & MODEL SPECS (MODAL/PANEL) -->
+      <div class="view-container" id="viewAbout" style="display: none;">
+        <section class="hero-header">
+          <div class="hero-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="hero-title">Model Specifications & <span class="purple-text">Evaluation</span></h1>
+            <p class="hero-description">Detailed Scikit-Learn training metrics, confusion matrix, and pipeline architecture.</p>
+          </div>
+        </section>
 
-        <!-- Performance Stats Grid -->
-        <div class="metrics-grid">
-          <div class="metric-box">
-            <div class="metric-value" id="valAccuracy">98.5%</div>
-            <div class="metric-name">Accuracy</div>
+        <div class="content-grid">
+          <div class="grid-left">
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Performance Metrics</span>
+              </div>
+              <div class="metrics-summary-grid">
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutAccuracy">98.45%</div>
+                  <div class="metric-title">Test Accuracy</div>
+                </div>
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutPrecision">98.28%</div>
+                  <div class="metric-title">Spam Precision</div>
+                </div>
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutRecall">89.06%</div>
+                  <div class="metric-title">Spam Recall</div>
+                </div>
+                <div class="metric-pill">
+                  <div class="metric-num" id="aboutF1">93.44%</div>
+                  <div class="metric-title">F1-Score</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-dark);">Test Confusion Matrix</h4>
+                <div class="cm-display-grid">
+                  <div class="cm-box cm-tn">
+                    <div class="cm-num" id="aboutTN">902</div>
+                    <div class="cm-desc">True Negatives (Ham ✓)</div>
+                  </div>
+                  <div class="cm-box cm-fp">
+                    <div class="cm-num" id="aboutFP">2</div>
+                    <div class="cm-desc">False Positives (Ham ❌ Spam)</div>
+                  </div>
+                  <div class="cm-box cm-fn">
+                    <div class="cm-num" id="aboutFN">14</div>
+                    <div class="cm-desc">False Negatives (Spam ❌ Ham)</div>
+                  </div>
+                  <div class="cm-box cm-tp">
+                    <div class="cm-num" id="aboutTP">114</div>
+                    <div class="cm-desc">True Positives (Spam ✓)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="metric-box">
-            <div class="metric-value" id="valPrecision">98.2%</div>
-            <div class="metric-name">Precision (Spam)</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-value" id="valRecall">91.4%</div>
-            <div class="metric-name">Recall (Spam)</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-value" id="valF1">94.7%</div>
-            <div class="metric-name">F1-Score</div>
+
+          <div class="grid-right">
+            <div class="dash-card">
+              <div class="card-head">
+                <span class="card-head-title">Architecture Details</span>
+              </div>
+              <ul class="specs-list">
+                <li><span>Algorithm:</span> <strong>Multinomial Naive Bayes (Laplace α=0.1)</strong></li>
+                <li><span>Feature Extraction:</span> <strong>TF-IDF (1-2 N-Grams, 5000 features)</strong></li>
+                <li><span>Dataset:</span> <strong>UCI SMS Spam Collection (5,158 clean rows)</strong></li>
+                <li><span>Benchmark Model:</span> <strong>Logistic Regression (96.03% Accuracy)</strong></li>
+                <li><span>API Framework:</span> <strong>FastAPI + Uvicorn</strong></li>
+                <li><span>API Documentation:</span> <a href="/docs" target="_blank" style="color: var(--primary-purple); font-weight: 600;">Swagger OpenAPI ↗</a></li>
+              </ul>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Confusion Matrix Visualization -->
-        <div class="cm-container">
-          <div class="cm-title">Test Confusion Matrix (Actual vs Predicted)</div>
-          <div class="cm-grid">
-            <div class="cm-cell tn">
-              <div class="cm-cell-count" id="cmTN">—</div>
-              <div class="cm-cell-desc">True Negatives (Ham ✓)</div>
-            </div>
-            <div class="cm-cell fp">
-              <div class="cm-cell-count" id="cmFP">—</div>
-              <div class="cm-cell-desc">False Positives (Ham ❌ Spam)</div>
-            </div>
-            <div class="cm-cell fn">
-              <div class="cm-cell-count" id="cmFN">—</div>
-              <div class="cm-cell-desc">False Negatives (Spam ❌ Ham)</div>
-            </div>
-            <div class="cm-cell tp">
-              <div class="cm-cell-count" id="cmTP">—</div>
-              <div class="cm-cell-desc">True Positives (Spam ✓)</div>
-            </div>
-          </div>
-        </div>
+      <!-- FOOTER -->
+      <footer class="dash-footer">
+        Spam Message Detector • Built with ❤️ using Python & Machine Learning
+      </footer>
 
-        <!-- Model Specs Info List -->
-        <ul class="info-list">
-          <li>
-            <span>Classifier:</span>
-            <strong id="infoClassifier">Multinomial Naive Bayes</strong>
-          </li>
-          <li>
-            <span>Vectorization:</span>
-            <strong>TF-IDF (Unigrams & Bigrams)</strong>
-          </li>
-          <li>
-            <span>Dataset:</span>
-            <strong>UCI SMS Spam Collection</strong>
-          </li>
-          <li>
-            <span>Train/Test Split:</span>
-            <strong>80% Train / 20% Stratified Test</strong>
-          </li>
-          <li>
-            <span>API Docs:</span>
-            <a href="/docs" target="_blank" style="color: var(--accent-cyan);">OpenAPI Swagger ↗</a>
-          </li>
-        </ul>
-      </aside>
-
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <p>AI Spam Message Detector — Built with Python, Scikit-learn, and FastAPI.</p>
-      <p style="margin-top: 0.25rem;">Suitable for University Portfolio & Practical Demonstrations.</p>
-    </div>
-  </footer>
+    </main>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>

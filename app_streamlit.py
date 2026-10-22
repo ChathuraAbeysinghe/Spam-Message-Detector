@@ -37,10 +37,53 @@ def load_metrics():
 
 
 def main():
-    st.title("🛡️ AI Spam Message Detector")
+    # Custom CSS matching reference UI palette
     st.markdown(
-        "A machine learning application trained on the **UCI SMS Spam Collection** "
-        "using **TF-IDF Vectorization** and **Multinomial Naive Bayes**."
+        """
+        <style>
+        .stApp {
+            background-color: #f8fafc;
+        }
+        h1, h2, h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+        }
+        .main-header-title {
+            color: #0f172a;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        .purple-accent {
+            color: #4f46e5;
+        }
+        .stButton>button {
+            background-color: #4f46e5 !important;
+            color: white !important;
+            border-radius: 10px !important;
+            border: none !important;
+            padding: 0.6rem 1.25rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+        }
+        .analysis-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="main-header-title">🛡️ Spam <span class="purple-accent">Message Detector</span></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "Enter a message below and let AI check if it's spam or not. "
+        "We analyze the content, links, and patterns to keep you safe from scams."
     )
 
     # Sidebar: Model and Dataset Information

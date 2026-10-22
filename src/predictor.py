@@ -112,9 +112,53 @@ class SpamPredictor:
                 explanation = "Moderate spam indicators found. Exercise caution before opening links or replying."
         else:
             if ham_prob >= 0.85:
-                explanation = "Standard conversational or legitimate communication patterns detected."
+                explanation = "The content appears to be a legitimate message."
             else:
                 explanation = "Appears legitimate, but borderline wording was detected."
+
+        # Granular heuristic analysis matching the dashboard inspection panel
+        import re
+
+        url_pattern = re.compile(r"https?://\S+|www\.\S+|\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}/\S+", re.IGNORECASE)
+        links = url_pattern.findall(clean_text)
+
+        common_spam_keywords = [
+            "free", "win", "winner", "cash", "prize", "claim", "urgent", "reward",
+            "gift card", "selected", "guaranteed", "call now", "click here", "reply",
+            "txt", "stop", "congrats", "congratulations", "offer", "discount", "loan", "voucher"
+        ]
+        text_lower = clean_text.lower()
+        found_keywords = [kw for kw in common_spam_keywords if kw in text_lower]
+
+        urgent_words = ["urgent", "immediately", "now", "alert", "expire", "action required", "compromised"]
+        has_urgency = any(w in text_lower for w in urgent_words)
+
+        if has_urgency and is_spam:
+            sender_analysis = "High urgency / psychological pressure detected"
+        elif is_spam:
+            sender_analysis = "Commercial solicitation / Unknown marketing sender"
+        else:
+            sender_analysis = "Looks legitimate"
+
+        if is_spam:
+            if any(k in text_lower for k in ["prize", "win", "gift card", "voucher", "cash"]):
+                message_pattern = "Prize / Reward scam pattern"
+            elif links:
+                message_pattern = "Phishing / External link pattern"
+            else:
+                message_pattern = "Promotional broadcast pattern"
+        else:
+            if any(k in text_lower for k in ["code", "otp", "verify", "verification"]) or (any(c.isdigit() for c in clean_text) and len(clean_text) < 80):
+                message_pattern = "Transactional / Service alert pattern"
+            else:
+                message_pattern = "Normal conversation pattern"
+
+        analysis_details = {
+            "suspicious_keywords": ", ".join(found_keywords) if found_keywords else "None found",
+            "links_detected": f"{len(links)} link(s) detected" if links else "None found",
+            "sender_analysis": sender_analysis,
+            "message_pattern": message_pattern,
+        }
 
         return {
             "message": clean_text,
@@ -126,6 +170,7 @@ class SpamPredictor:
             "explanation": explanation,
             "character_count": len(clean_text),
             "word_count": len(clean_text.split()),
+            "analysis_details": analysis_details,
             "disclaimer": (
                 "Notice: Model predictions are statistical estimates based on historical SMS data "
                 "and are not an absolute guarantee of safety or malicious intent."

@@ -1,7 +1,7 @@
 {
   "model_name": "Multinomial Naive Bayes (TF-IDF)",
   "random_seed": 42,
-  "evaluation_timestamp": "2026-10-22T14:35:31.043450",
+  "evaluation_timestamp": "2026-10-22T14:55:54.498164",
   "dataset_summary": {
     "total_samples": 5158,
     "train_samples": 4126,
