@@ -1,0 +1,74 @@
+{
+  "model_name": "Multinomial Naive Bayes (TF-IDF)",
+  "random_seed": 42,
+  "evaluation_timestamp": "2026-10-22T14:35:31.043450",
+  "dataset_summary": {
+    "total_samples": 5158,
+    "train_samples": 4126,
+    "test_samples": 1032,
+    "ham_count": 4516,
+    "spam_count": 642
+  },
+  "performance_metrics": {
+    "accuracy": 0.9845,
+    "precision": 0.9828,
+    "recall": 0.8906,
+    "f1_score": 0.9344
+  },
+  "confusion_matrix": {
+    "labels": [
+      "ham",
+      "spam"
+    ],
+    "matrix": [
+      [
+        902,
+        2
+      ],
+      [
+        14,
+        114
+      ]
+    ],
+    "true_negatives": 902,
+    "false_positives": 2,
+    "false_negatives": 14,
+    "true_positives": 114
+  },
+  "error_analysis_explanation": {
+    "false_positive": "A legitimate message (Ham) is mistakenly predicted as Spam. In real life, this is critical because a user might miss an urgent bank OTP, job offer, or family message. We prioritize High Precision.",
+    "false_negative": "A Spam message slips through and is predicted as Ham. While annoying, the user simply sees an unwanted message. Less damaging than losing an essential message."
+  },
+  "benchmark_comparison": {
+    "benchmark_model": "Logistic Regression (TF-IDF)",
+    "accuracy": 0.9603,
+    "f1_score": 0.8128
+  },
+  "classification_report": {
+    "ham": {
+      "precision": 0.9847161572052402,
+      "recall": 0.9977876106194691,
+      "f1-score": 0.9912087912087912,
+      "support": 904.0
+    },
+    "spam": {
+      "precision": 0.9827586206896551,
+      "recall": 0.890625,
+      "f1-score": 0.9344262295081968,
+      "support": 128.0
+    },
+    "accuracy": 0.9844961240310077,
+    "macro avg": {
+      "precision": 0.9837373889474477,
+      "recall": 0.9442063053097345,
+      "f1-score": 0.9628175103584939,
+      "support": 1032.0
+    },
+    "weighted avg": {
+      "precision": 0.9844733619785009,
+      "recall": 0.9844961240310077,
+      "f1-score": 0.9841659928583298,
+      "support": 1032.0
+    }
+  }
+}

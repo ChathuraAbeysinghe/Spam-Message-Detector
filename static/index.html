@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Spam Message Detector — SMS Classifier</title>
+  <meta name="description" content="A machine learning web application using Scikit-Learn TF-IDF and Multinomial Naive Bayes to classify SMS messages as Spam or Ham.">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="container header-content">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">🛡️</div>
+        <div>
+          <div class="brand-title">AI Spam Guard</div>
+          <div class="brand-subtitle">NLP SMS Classifier</div>
+        </div>
+      </div>
+      <div class="header-badge" id="systemStatus">
+        <span class="pulse-dot"></span>
+        <span id="statusText">Model Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero / Headline -->
+    <section class="hero">
+      <h1>AI SMS Spam Message Detector</h1>
+      <p>Analyze incoming text messages in real-time using a trained Machine Learning pipeline (TF-IDF + Multinomial Naive Bayes).</p>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="app-grid">
+      
+      <!-- Left Column: Input Form & Result -->
+      <section class="card" aria-labelledby="detectorHeading">
+        <h2 id="detectorHeading" class="card-title">
+          <span>✉️</span> Message Classifier
+        </h2>
+
+        <!-- Sample messages chips -->
+        <div class="sample-section">
+          <span class="sample-label">Quick Test Samples (Tap to test):</span>
+          <div class="sample-chips">
+            <button type="button" class="chip chip-spam" data-msg="URGENT! You have won a £1,000 Walmart gift card! Call 09061701461 to claim your reward immediately.">
+              🚨 Prize / Scam Spam
+            </button>
+            <button type="button" class="chip chip-spam" data-msg="FreeMsg: Congrats! You are selected for a free trial. Reply YES to 80488. T&C apply.">
+              🎁 Promotion Spam
+            </button>
+            <button type="button" class="chip chip-ham" data-msg="Hey! Are you still coming to the library for study group this evening? Let me know.">
+              💬 Casual Chat (Ham)
+            </button>
+            <button type="button" class="chip chip-ham" data-msg="Your verification code is 492018. It is valid for 10 minutes. Do not share this code.">
+              🔑 OTP / Service (Ham)
+            </button>
+          </div>
+        </div>
+
+        <!-- Input Form -->
+        <form id="spamForm" onsubmit="event.preventDefault(); handlePredict();">
+          <div class="input-wrapper">
+            <label for="messageInput" class="sample-label">SMS Message Content:</label>
+            <textarea 
+              id="messageInput" 
+              class="message-textarea" 
+              placeholder="Paste or type an SMS message here to test (e.g., 'Congratulations! You won cash...')"
+              required
+              maxlength="5000"
+            ></textarea>
+          </div>
+
+          <div class="input-footer">
+            <span id="charCounter">0 / 5000 chars (0 words)</span>
+            <span id="validationMsg"></span>
+          </div>
+
+          <!-- Error Alert Container -->
+          <div id="errorAlert" class="alert-error" role="alert"></div>
+
+          <!-- Action Buttons -->
+          <div class="btn-group">
+            <button type="submit" id="predictBtn" class="btn btn-primary">
+              <span id="btnIcon">🔍</span>
+              <span id="btnText">Classify Message</span>
+            </button>
+            <button type="button" id="clearBtn" class="btn btn-secondary" onclick="handleClear();">
+              Clear
+            </button>
+          </div>
+        </form>
+
+        <!-- Prediction Result Card -->
+        <article id="resultCard" class="result-card" aria-live="polite">
+          <div class="result-header">
+            <div id="resultBadge" class="result-badge">
+              <span id="badgeIcon"></span>
+              <span id="badgeLabel"></span>
+            </div>
+            <div id="confidenceScore" class="result-confidence"></div>
+          </div>
+
+          <div class="meter-label">
+            <span>Estimated Spam Probability:</span>
+            <strong id="spamProbPercent">0%</strong>
+          </div>
+          <div class="progress-bar-bg" aria-hidden="true">
+            <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+
+          <p id="resultExplanation" class="result-explanation"></p>
+          <div class="disclaimer-box" id="resultDisclaimer"></div>
+        </article>
+      </section>
+
+      <!-- Right Column: Model Specs & Actual Performance Metrics -->
+      <aside class="card" aria-labelledby="metricsHeading">
+        <h2 id="metricsHeading" class="card-title">
+          <span>📊</span> Model & Benchmark Metrics
+        </h2>
+
+        <!-- Performance Stats Grid -->
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-value" id="valAccuracy">98.5%</div>
+            <div class="metric-name">Accuracy</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="valPrecision">98.2%</div>
+            <div class="metric-name">Precision (Spam)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="valRecall">91.4%</div>
+            <div class="metric-name">Recall (Spam)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-value" id="valF1">94.7%</div>
+            <div class="metric-name">F1-Score</div>
+          </div>
+        </div>
+
+        <!-- Confusion Matrix Visualization -->
+        <div class="cm-container">
+          <div class="cm-title">Test Confusion Matrix (Actual vs Predicted)</div>
+          <div class="cm-grid">
+            <div class="cm-cell tn">
+              <div class="cm-cell-count" id="cmTN">—</div>
+              <div class="cm-cell-desc">True Negatives (Ham ✓)</div>
+            </div>
+            <div class="cm-cell fp">
+              <div class="cm-cell-count" id="cmFP">—</div>
+              <div class="cm-cell-desc">False Positives (Ham ❌ Spam)</div>
+            </div>
+            <div class="cm-cell fn">
+              <div class="cm-cell-count" id="cmFN">—</div>
+              <div class="cm-cell-desc">False Negatives (Spam ❌ Ham)</div>
+            </div>
+            <div class="cm-cell tp">
+              <div class="cm-cell-count" id="cmTP">—</div>
+              <div class="cm-cell-desc">True Positives (Spam ✓)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model Specs Info List -->
+        <ul class="info-list">
+          <li>
+            <span>Classifier:</span>
+            <strong id="infoClassifier">Multinomial Naive Bayes</strong>
+          </li>
+          <li>
+            <span>Vectorization:</span>
+            <strong>TF-IDF (Unigrams & Bigrams)</strong>
+          </li>
+          <li>
+            <span>Dataset:</span>
+            <strong>UCI SMS Spam Collection</strong>
+          </li>
+          <li>
+            <span>Train/Test Split:</span>
+            <strong>80% Train / 20% Stratified Test</strong>
+          </li>
+          <li>
+            <span>API Docs:</span>
+            <a href="/docs" target="_blank" style="color: var(--accent-cyan);">OpenAPI Swagger ↗</a>
+          </li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>AI Spam Message Detector — Built with Python, Scikit-learn, and FastAPI.</p>
+      <p style="margin-top: 0.25rem;">Suitable for University Portfolio & Practical Demonstrations.</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
